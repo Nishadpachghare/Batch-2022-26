@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* 1. Importing the required elegant fonts */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  /* 2. Luxury Theme Colors */
+  --matte-black: #121212;
+  --soft-black: #1E1E1E;
+  --luxury-gold: #D4AF37;
+  --gold-light: #F3E5AB;
+  --off-white: #EAEAEA;
+  --border: #333333;
+  
+  /* 3. Typography Setup */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-handwriting: 'Dancing Script', cursive;
+
+  /* Force dark mode for native elements like scrollbars */
+  color-scheme: dark; 
+}
+
+/* 4. Base Body Styling */
+body {
+  background-color: var(--matte-black);
+  color: var(--off-white);
+  font-family: var(--font-body);
+  margin: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  /* Removed the hardcoded 1126px width so Tailwind handles responsiveness */
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 5. Headings setup */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #ffffff; /* Brighter white for headings */
+}
+
+h1 {
+  letter-spacing: -0.02em;
+}
+
+/* 6. Elegant Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--matte-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--luxury-gold);
+}
+
+/* 7. Retaining code tag styling but fitting the theme */
+code, .counter {
+  font-family: ui-monospace, Consolas, monospace;
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--soft-black);
+  color: var(--luxury-gold);
+  border: 1px solid var(--border);
+}
