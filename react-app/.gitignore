@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Parent directory files
+../.vscode/
+../SETUP_COMPLETE.md
+../backend/
+
