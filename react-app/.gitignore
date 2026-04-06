@@ -23,8 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
-# Parent directory files
-../.vscode/
-../SETUP_COMPLETE.md
-../backend/
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+build/
+.next/
+
 
