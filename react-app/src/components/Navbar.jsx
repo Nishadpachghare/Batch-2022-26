@@ -92,7 +92,9 @@ export default function Navbar() {
           onClick={() => setMenuOpen((prev) => !prev)}
           className="absolute right-4 sm:right-6 flex md:hidden flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-lg transition-all duration-200 active:scale-95"
           style={{
-            background: menuOpen ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.08)",
+            background: menuOpen
+              ? "rgba(201,168,76,0.12)"
+              : "rgba(201,168,76,0.08)",
             border: `1px solid ${menuOpen ? "rgba(201,168,76,0.4)" : "rgba(201,168,76,0.2)"}`,
           }}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -117,7 +119,9 @@ export default function Navbar() {
             className="block w-4 h-[1.5px] rounded-full transition-all duration-300 origin-center"
             style={{
               background: "#c9a84c",
-              transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none",
+              transform: menuOpen
+                ? "translateY(-6.5px) rotate(-45deg)"
+                : "none",
             }}
           />
         </button>
@@ -170,8 +174,12 @@ export default function Navbar() {
                     textTransform: "uppercase",
                     fontWeight: active ? "600" : "400",
                     color: active ? "#c9a84c" : "rgba(240,235,224,0.65)",
-                    background: active ? "rgba(201,168,76,0.08)" : "transparent",
-                    borderLeft: active ? "2.5px solid #c9a84c" : "2.5px solid transparent",
+                    background: active
+                      ? "rgba(201,168,76,0.08)"
+                      : "transparent",
+                    borderLeft: active
+                      ? "2.5px solid #c9a84c"
+                      : "2.5px solid transparent",
                   }}
                 >
                   <span>{label}</span>
