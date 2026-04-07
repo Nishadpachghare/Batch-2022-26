@@ -237,11 +237,11 @@ export default function Yearbook() {
     }
 
     const totalSize = filesToUpload.reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > 100 * 1024 * 1024) {
+    if (totalSize > 500 * 1024 * 1024) {
       setMemoryStatus({
         type: "error",
         message:
-          "Total file size exceeds 100MB. Please select smaller files or fewer files.",
+          "Total file size exceeds 500MB. Please upload fewer files (max 200MB per video, 50MB per photo).",
       });
       return;
     }
@@ -259,7 +259,7 @@ export default function Yearbook() {
       const compressedFiles = await Promise.all(
         filesToUpload.map(async (file) => {
           if (file.type.startsWith("image/")) {
-            return await compressImage(file, 5);
+            return await compressImage(file, 50); // 50MB limit for photos
           }
           return file;
         }),

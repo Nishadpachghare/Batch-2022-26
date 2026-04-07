@@ -6,6 +6,7 @@ const apiBaseURL =
 
 const api = axios.create({
   baseURL: apiBaseURL,
+  timeout: 120000, // 120 sec timeout for large file uploads
 });
 
 function getApiErrorMessage(error, fallbackMessage) {
@@ -67,7 +68,9 @@ async function updateStudent(studentId, payload) {
 
     formData.append("image", payload.imageFile);
 
-    const response = await api.patch(`/api/students/${studentId}`, formData);
+    const response = await api.patch(`/api/students/${studentId}`, formData, {
+      timeout: 120000, // 120 sec timeout for large file uploads (photo/video up to 200MB)
+    });
     return response.data;
   }
 
@@ -169,7 +172,7 @@ async function uploadMemory(payload) {
   formData.append("studentName", payload.studentName);
 
   const response = await api.post("/api/media", formData, {
-    timeout: 60000, // 60 sec timeout
+    timeout: 120000, // 120 sec timeout for up to 200MB videos
   });
   return response.data;
 }
