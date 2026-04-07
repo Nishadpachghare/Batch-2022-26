@@ -99,6 +99,65 @@ async function getMedia() {
   return response.data;
 }
 
+// ✅ Compress image before upload
+async function compressImage(file, maxSizeMB = 5) {
+  if (!file.type.startsWith("image/")) return file; // Not an image
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        
+        // Reduce to max 1920px width while maintaining aspect ratio
+        if (width > 1920) {
+          height = (height * 1920) / width;
+          width = 1920;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext("2d", { alpha: true });
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to blob with reduced quality
+        canvas.toBlob(
+          (blob) => {
+            const compressedFile = new File([blob], file.name, {
+              type: "image/jpeg",
+              lastModified: file.lastModified,
+            });
+            
+            // If still too large, reduce quality more
+            if (compressedFile.size > maxSizeMB * 1024 * 1024) {
+              canvas.toBlob(
+                (blob2) => {
+                  const finalFile = new File([blob2], file.name, {
+                    type: "image/jpeg",
+                    lastModified: file.lastModified,
+                  });
+                  resolve(finalFile);
+                },
+                "image/jpeg",
+                0.6
+              );
+            } else {
+              resolve(compressedFile);
+            }
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+    };
+  });
+}
+
 async function uploadMemory(payload) {
   const formData = new FormData();
   formData.append("file", payload.file);
@@ -109,8 +168,37 @@ async function uploadMemory(payload) {
   formData.append("studentId", payload.studentId);
   formData.append("studentName", payload.studentName);
 
-  const response = await api.post("/api/media", formData);
+  const response = await api.post("/api/media", formData, {
+    timeout: 60000, // 60 sec timeout
+  });
   return response.data;
+}
+
+// ✅ Upload multiple files in parallel (2 at a time for better performance)
+async function uploadMemoriesParallel(payloads) {
+  const results = [];
+  const errors = [];
+  const CONCURRENT_LIMIT = 2; // Upload 2 files at a time
+  
+  for (let i = 0; i < payloads.length; i += CONCURRENT_LIMIT) {
+    const batch = payloads.slice(i, i + CONCURRENT_LIMIT);
+    const batchResults = await Promise.allSettled(
+      batch.map((payload) => uploadMemory(payload))
+    );
+    
+    batchResults.forEach((result, idx) => {
+      if (result.status === "fulfilled") {
+        results.push(result.value);
+      } else {
+        errors.push({
+          file: batch[idx].file?.name || `File ${i + idx + 1}`,
+          error: result.reason,
+        });
+      }
+    });
+  }
+  
+  return { results, errors };
 }
 
 async function getMessages() {
@@ -125,6 +213,7 @@ async function postMessage(payload) {
 
 export {
   api,
+  compressImage,
   getApiErrorMessage,
   getMedia,
   getMessages,
@@ -132,6 +221,7 @@ export {
   postMessage,
   updateStudent,
   uploadMemory,
+  uploadMemoriesParallel,
 };
 
 export default api;

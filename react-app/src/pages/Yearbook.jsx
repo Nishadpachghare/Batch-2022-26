@@ -6,6 +6,8 @@ import {
   postMessage,
   updateStudent,
   uploadMemory,
+  compressImage,
+  uploadMemoriesParallel,
 } from "../lib/yearbookApi";
 import DEFAULT_CLASSMATES from "../data/defaultClassmates";
 
@@ -233,57 +235,78 @@ export default function Yearbook() {
       });
       return;
     }
+    
     const totalSize = filesToUpload.reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > 600 * 1024 * 1024) {
+    if (totalSize > 100 * 1024 * 1024) {
       setMemoryStatus({
         type: "error",
-        message: "Total file size exceeds 600MB. Please select smaller files.",
+        message: "Total file size exceeds 100MB. Please select smaller files or fewer files.",
       });
       return;
     }
+    
     setMemorySubmitting(true);
     setMemoryStatus(EMPTY_STATUS);
+    
     try {
-      let uploadedCount = 0;
-      let failedCount = 0;
-      const failedFiles = [];
-      for (const file of filesToUpload) {
-        try {
-          const fileType = file.type.startsWith("image/") ? "photo" : "video";
-          await uploadMemory({
-            file,
-            caption: `${selectedStudent.name} - ${memoryYear} (${fileType})`,
-            year: memoryYear,
-            uploadedBy: selectedStudent.name,
-            studentId: selectedStudent._id,
-            studentName: selectedStudent.name,
-          });
-          uploadedCount++;
-        } catch (err) {
-          console.error(`Failed to upload ${file.name}:`, err);
-          failedFiles.push(file.name);
-          failedCount++;
-        }
-      }
+      setMemoryStatus({
+        type: "info",
+        message: "Compressing images and preparing upload...",
+      });
+
+      // Compress images first
+      const compressedFiles = await Promise.all(
+        filesToUpload.map(async (file) => {
+          if (file.type.startsWith("image/")) {
+            return await compressImage(file, 5);
+          }
+          return file;
+        })
+      );
+
+      // Prepare upload payloads
+      const payloads = compressedFiles.map((file, idx) => {
+        const fileType = file.type.startsWith("image/") ? "photo" : "video";
+        return {
+          file,
+          caption: `${selectedStudent.name} - ${memoryYear} (${fileType})`,
+          year: memoryYear,
+          uploadedBy: selectedStudent.name,
+          studentId: selectedStudent._id,
+          studentName: selectedStudent.name,
+        };
+      });
+
+      // Upload in parallel (2 at a time)
+      setMemoryStatus({
+        type: "info",
+        message: `📤 Uploading ${payloads.length} file(s) to Media Vault...`,
+      });
+
+      const { results, errors } = await uploadMemoriesParallel(payloads);
+
       setMemoryFile(null);
       setMemoryFiles([]);
       if (memoryInputRef.current) memoryInputRef.current.value = "";
-      if (failedCount === 0) {
+
+      if (errors.length === 0) {
         setMemoryStatus({
           type: "success",
-          message: `✅ Uploaded ${uploadedCount} file(s) to Media Vault for ${memoryYear}.`,
+          message: `✅ Successfully uploaded ${results.length} file(s) to Media Vault for ${memoryYear}!`,
+        });
+      } else if (results.length > 0) {
+        setMemoryStatus({
+          type: "warning",
+          message: `⚠️ Uploaded ${results.length}/${payloads.length} file(s). Failed: ${errors.map((e) => e.file).join(", ")}`,
         });
       } else {
         setMemoryStatus({
           type: "error",
-          message: `⚠️ Uploaded ${uploadedCount} file(s). Failed: ${failedFiles.join(", ")}`,
+          message: `❌ All uploads failed. ${errors[0]?.error?.message || "Please try again."}`,
         });
       }
     } catch (error) {
-      const errorMsg =
-        error?.response?.data?.error ||
-        error?.message ||
-        "Could not upload memories.";
+      const errorMsg = getApiErrorMessage(error, "Could not upload memories.");
       setMemoryStatus({
         type: "error",
         message: `❌ Upload failed: ${errorMsg}`,
