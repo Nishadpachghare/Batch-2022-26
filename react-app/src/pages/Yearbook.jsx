@@ -235,19 +235,20 @@ export default function Yearbook() {
       });
       return;
     }
-    
+
     const totalSize = filesToUpload.reduce((sum, f) => sum + f.size, 0);
     if (totalSize > 100 * 1024 * 1024) {
       setMemoryStatus({
         type: "error",
-        message: "Total file size exceeds 100MB. Please select smaller files or fewer files.",
+        message:
+          "Total file size exceeds 100MB. Please select smaller files or fewer files.",
       });
       return;
     }
-    
+
     setMemorySubmitting(true);
     setMemoryStatus(EMPTY_STATUS);
-    
+
     try {
       setMemoryStatus({
         type: "info",
@@ -261,7 +262,7 @@ export default function Yearbook() {
             return await compressImage(file, 5);
           }
           return file;
-        })
+        }),
       );
 
       // Prepare upload payloads
