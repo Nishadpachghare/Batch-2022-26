@@ -28,11 +28,12 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className="flex items-center justify-center sticky top-0 z-50 px-4 sm:px-6 md:px-14 py-4 sm:py-5"
+        className="flex items-center justify-center sticky top-0 z-50 px-4 sm:px-6 md:px-14 py-3.5 sm:py-4"
         style={{
           borderBottom: "0.5px solid rgba(201,168,76,0.2)",
           background: "rgba(17,17,16,0.96)",
           backdropFilter: "blur(12px)",
+          minHeight: "56px",
         }}
       >
         {/* Logo — left */}
@@ -49,7 +50,7 @@ export default function Navbar() {
             </svg>
           </div>
           <span
-            className="font-heading text-[15px] sm:text-[17px] text-off-white"
+            className="font-heading text-[15px] sm:text-[17px] text-off-white hidden sm:inline"
             style={{ letterSpacing: "0.03em" }}
           >
             Batch '26
@@ -64,18 +65,22 @@ export default function Navbar() {
               <li key={to}>
                 <Link
                   to={to}
-                  className="no-underline transition-colors duration-200"
+                  className="no-underline transition-all duration-200 hover:text-[#c9a84c] relative group"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "14px",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: active ? "#c9a84c" : "rgba(240,235,224,0.45)",
-                    borderBottom: active ? "1.5px solid #c9a84c" : "none",
-                    paddingBottom: active ? "2px" : "0",
                   }}
                 >
                   {label}
+                  {active && (
+                    <span
+                      className="absolute bottom-0 left-0 w-full h-[1.5px]"
+                      style={{ background: "#c9a84c" }}
+                    />
+                  )}
                 </Link>
               </li>
             );
@@ -85,10 +90,10 @@ export default function Navbar() {
         {/* Hamburger — right, only on mobile */}
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="absolute right-4 sm:right-6 flex md:hidden flex-col items-center justify-center w-9 h-9 gap-[5px] rounded-lg transition-all duration-200"
+          className="absolute right-4 sm:right-6 flex md:hidden flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-lg transition-all duration-200 active:scale-95"
           style={{
-            background: "rgba(201,168,76,0.08)",
-            border: "1px solid rgba(201,168,76,0.2)",
+            background: menuOpen ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.08)",
+            border: `1px solid ${menuOpen ? "rgba(201,168,76,0.4)" : "rgba(201,168,76,0.2)"}`,
           }}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
@@ -112,9 +117,7 @@ export default function Navbar() {
             className="block w-4 h-[1.5px] rounded-full transition-all duration-300 origin-center"
             style={{
               background: "#c9a84c",
-              transform: menuOpen
-                ? "translateY(-6.5px) rotate(-45deg)"
-                : "none",
+              transform: menuOpen ? "translateY(-6.5px) rotate(-45deg)" : "none",
             }}
           />
         </button>
@@ -133,53 +136,57 @@ export default function Navbar() {
         onClick={() => setMenuOpen(false)}
       />
 
-      {/* Slide-down drawer */}
+      {/* Slide-down drawer with smooth animations */}
       <div
-        className="fixed left-0 right-0 top-[57px] z-40 md:hidden overflow-hidden transition-all duration-300 ease-in-out"
+        className="fixed left-0 right-0 top-14 z-40 md:hidden overflow-hidden transition-all duration-300 ease-in-out"
         style={{
-          maxHeight: menuOpen ? "320px" : "0px",
+          maxHeight: menuOpen ? "380px" : "0px",
           opacity: menuOpen ? 1 : 0,
           background: "rgba(17,17,16,0.98)",
           borderBottom: "0.5px solid rgba(201,168,76,0.2)",
           backdropFilter: "blur(12px)",
         }}
       >
-        <ul className="flex flex-col list-none m-0 p-0 py-3">
+        <ul className="flex flex-col list-none m-0 p-0">
           {links.map(({ label, to }, idx) => {
             const active = pathname === to;
             return (
-              <li key={to}>
+              <li
+                key={to}
+                style={{
+                  opacity: menuOpen ? 1 : 0,
+                  transform: menuOpen ? "translateX(0)" : "translateX(-10px)",
+                  transition: `all 300ms ease-in-out ${idx * 50}ms`,
+                }}
+              >
                 <Link
                   to={to}
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-between px-6 py-3.5 no-underline transition-all duration-200"
+                  className="flex items-center justify-between px-5 py-4 no-underline transition-all duration-200 active:bg-opacity-20"
                   style={{
                     fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "16px",
+                    fontSize: "15px",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
-                    color: active ? "#c9a84c" : "rgba(240,235,224,0.6)",
-                    background: active
-                      ? "rgba(201,168,76,0.06)"
-                      : "transparent",
-                    borderLeft: active
-                      ? "2px solid #c9a84c"
-                      : "2px solid transparent",
-                    animationDelay: `${idx * 60}ms`,
+                    fontWeight: active ? "600" : "400",
+                    color: active ? "#c9a84c" : "rgba(240,235,224,0.65)",
+                    background: active ? "rgba(201,168,76,0.08)" : "transparent",
+                    borderLeft: active ? "2.5px solid #c9a84c" : "2.5px solid transparent",
                   }}
                 >
                   <span>{label}</span>
                   {active && (
                     <svg
-                      width="14"
-                      height="14"
+                      width="16"
+                      height="16"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="#c9a84c"
-                      strokeWidth="2"
+                      strokeWidth="2.5"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
                 </Link>
@@ -187,6 +194,8 @@ export default function Navbar() {
             );
           })}
         </ul>
+        {/* Bottom padding for better UX */}
+        <div style={{ height: "12px" }} />
       </div>
     </>
   );
