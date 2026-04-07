@@ -1,7 +1,11 @@
 import axios from "axios";
 
-// Create axios instance with no baseURL for Vite proxy to work
-const api = axios.create();
+const apiBaseURL =
+  import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, "") || "";
+
+const api = axios.create({
+  baseURL: apiBaseURL,
+});
 
 function getApiErrorMessage(error, fallbackMessage) {
   return (
