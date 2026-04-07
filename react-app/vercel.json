@@ -3,7 +3,23 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/journey",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/yearbook",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/vault",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wall",
       "destination": "/index.html"
     }
   ],
