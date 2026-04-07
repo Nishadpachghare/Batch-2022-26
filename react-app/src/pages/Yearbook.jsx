@@ -309,7 +309,6 @@ export default function Yearbook() {
     try {
       await postMessage({
         content: trimmedMessage,
-        fromName: "Anonymous",
         toName: selectedStudent.name,
         toStudentId: selectedStudent._id,
       });

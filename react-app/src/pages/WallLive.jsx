@@ -69,7 +69,6 @@ export default function WallLive() {
     try {
       const createdMessage = await postMessage({
         content: newMsg.trim(),
-        fromName: "Anonymous",
         toName: "The Wall",
       });
 
@@ -215,11 +214,6 @@ export default function WallLive() {
             <div className="columns-1 sm:columns-2 lg:columns-4 gap-6 space-y-6">
               {messages.map((message, index) => {
                 const variant = NOTE_VARIANTS[index % NOTE_VARIANTS.length];
-                const targetedRecipient =
-                  message.toName && message.toName !== "The Wall"
-                    ? message.toName
-                    : "";
-
                 return (
                   <div
                     key={message._id}
@@ -236,18 +230,6 @@ export default function WallLive() {
                         boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
                       }}
                     />
-
-                    {targetedRecipient && (
-                      <div
-                        className="mb-4 inline-flex rounded-full px-3 py-1 font-body text-[11px] uppercase tracking-[0.18em]"
-                        style={{
-                          background: "rgba(0,0,0,0.08)",
-                          color: "rgba(0,0,0,0.55)",
-                        }}
-                      >
-                        For {targetedRecipient}
-                      </div>
-                    )}
 
                     <p
                       className="font-handwriting text-black leading-relaxed mb-5"

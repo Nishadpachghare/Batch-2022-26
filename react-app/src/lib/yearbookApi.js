@@ -8,9 +8,30 @@ const api = axios.create({
 });
 
 function getApiErrorMessage(error, fallbackMessage) {
+  const responseError = error?.response?.data?.error;
+
+  if (typeof responseError === "string") {
+    return responseError;
+  }
+
+  if (responseError && typeof responseError === "object") {
+    return (
+      responseError.message ||
+      responseError.error ||
+      responseError.code ||
+      fallbackMessage ||
+      "Something went wrong."
+    );
+  }
+
+  const responseMessage = error?.response?.data?.message;
+
+  if (typeof responseMessage === "string") {
+    return responseMessage;
+  }
+
   return (
-    error?.response?.data?.error ||
-    error?.message ||
+    (typeof error?.message === "string" ? error.message : "") ||
     fallbackMessage ||
     "Something went wrong."
   );

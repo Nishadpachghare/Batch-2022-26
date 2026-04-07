@@ -50,7 +50,6 @@ export default function Wall() {
     try {
       const postedMsg = await postMessage({
         content: newMsg.trim(),
-        fromName: "Anonymous",
         toName: "The Wall",
       });
       setMessages((prev) => [postedMsg, ...prev]);
