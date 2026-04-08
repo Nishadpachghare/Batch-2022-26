@@ -224,6 +224,19 @@ export default function Yearbook() {
   };
 
   const handleMemoryUpload = async (e) => {
+    /**
+     * MEMORY UPLOAD FLOW (Frontend)
+     *
+     * STEPS:
+     * 1. Validate files exist
+     * 2. Check total size (max 500MB)
+     * 3. Compress images (max 1920px, quality 85%)
+     * 4. Prepare payloads with metadata (studentId, year, name, etc.)
+     * 5. Upload to backend in parallel (2 at a time)
+     * 6. Backend → Cloudinary → MongoDB
+     * 7. Display results to user
+     * 8. Data visible in MediaVault page
+     */
     e.preventDefault();
     if (!selectedStudent) return;
     const filesToUpload =
@@ -255,17 +268,19 @@ export default function Yearbook() {
         message: "Compressing images and preparing upload...",
       });
 
-      // Compress images first
+      // STEP 1: Compress images to reduce bandwidth
+      // Videos are sent as-is (up to 200MB)
       const compressedFiles = await Promise.all(
         filesToUpload.map(async (file) => {
           if (file.type.startsWith("image/")) {
-            return await compressImage(file, 50); // 50MB limit for photos
+            return await compressImage(file, 50); // Auto-compress images to max 1920px
           }
-          return file;
+          return file; // Videos passed through unchanged
         }),
       );
 
-      // Prepare upload payloads
+      // STEP 2: Prepare upload payloads with metadata
+      // Each file needs: file binary + metadata (studentId, year, caption, etc.)
       const payloads = compressedFiles.map((file, idx) => {
         const fileType = file.type.startsWith("image/") ? "photo" : "video";
         return {
@@ -278,7 +293,12 @@ export default function Yearbook() {
         };
       });
 
-      // Upload in parallel (2 at a time)
+      // STEP 3: Upload to backend in parallel (2 files at a time)
+      // Backend will:
+      // - Receive files + metadata
+      // - Upload each to Cloudinary
+      // - Create MongoDB Media record with Cloudinary URL
+      // - Return Media document to frontend
       setMemoryStatus({
         type: "info",
         message: `📤 Uploading ${payloads.length} file(s) to Media Vault...`,
@@ -286,21 +306,29 @@ export default function Yearbook() {
 
       const { results, errors } = await uploadMemoriesParallel(payloads);
 
+      // Clear file inputs after upload attempt
       setMemoryFile(null);
       setMemoryFiles([]);
       if (memoryInputRef.current) memoryInputRef.current.value = "";
 
+      // STEP 4: Handle response results
+      // results array contains Media documents from MongoDB (with Cloudinary URLs)
+      // errors array contains failed uploads
+      // Users can now see uploaded memories in MediaVault page
       if (errors.length === 0) {
+        // ✅ All uploads successful
         setMemoryStatus({
           type: "success",
           message: `✅ Successfully uploaded ${results.length} file(s) to Media Vault for ${memoryYear}!`,
         });
       } else if (results.length > 0) {
+        // ⚠️ Some uploads successful, some failed
         setMemoryStatus({
           type: "warning",
           message: `⚠️ Uploaded ${results.length}/${payloads.length} file(s). Failed: ${errors.map((e) => e.file).join(", ")}`,
         });
       } else {
+        // ❌ All uploads failed
         setMemoryStatus({
           type: "error",
           message: `❌ All uploads failed. ${errors[0]?.error?.message || "Please try again."}`,

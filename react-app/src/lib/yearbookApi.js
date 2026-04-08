@@ -162,26 +162,49 @@ async function compressImage(file, maxSizeMB = 5) {
 }
 
 async function uploadMemory(payload) {
+  /**
+   * Single Memory Upload
+   * Sends file + metadata to backend via FormData
+   * Backend processes the upload and returns created Media document with Cloudinary URL
+   */
   const formData = new FormData();
-  formData.append("file", payload.file);
-  formData.append("caption", payload.caption);
+  formData.append("file", payload.file); // Actual file for Cloudinary upload
+  formData.append("caption", payload.caption); // Display caption in Media Vault
   formData.append("year", payload.year);
   formData.append("category", payload.category);
   formData.append("uploadedBy", payload.uploadedBy);
-  formData.append("studentId", payload.studentId);
-  formData.append("studentName", payload.studentName);
+  formData.append("studentId", payload.studentId); // Store uploader's ID in MongoDB
+  formData.append("studentName", payload.studentName); // Store uploader's name
 
+  // 120 sec timeout for large video uploads (up to 200MB)
   const response = await api.post("/api/media", formData, {
-    timeout: 120000, // 120 sec timeout for up to 200MB videos
+    timeout: 120000,
   });
+  
+  // Returns: Complete Media document from MongoDB with:
+  // - url: Cloudinary secure URL
+  // - uploadedAt: timestamp
+  // - year, studentId, studentName: metadata
   return response.data;
 }
 
 // ✅ Upload multiple files in parallel (2 at a time for better performance)
+// FLOW: Frontend → Compress → Backend → Cloudinary → MongoDB → Return URL to Frontend
 async function uploadMemoriesParallel(payloads) {
+  /**
+   * Memory Upload Process:
+   * 1. Send each file to backend with metadata (studentId, year, caption, etc.)
+   * 2. Backend receives file + FormData with metadata
+   * 3. Backend uploads to Cloudinary with secure URL generation
+   * 4. Cloudinary returns secure_url
+   * 5. Backend creates MongoDB Media document with the URL, metadata, and timestamps
+   * 6. Backend returns the complete Media document to frontend
+   * 7. Frontend displays success/error messages
+   * 8. Users can view their uploaded memories in MediaVault page
+   */
   const results = [];
   const errors = [];
-  const CONCURRENT_LIMIT = 2; // Upload 2 files at a time
+  const CONCURRENT_LIMIT = 2; // Upload 2 files at a time to avoid overwhelming backend
   
   for (let i = 0; i < payloads.length; i += CONCURRENT_LIMIT) {
     const batch = payloads.slice(i, i + CONCURRENT_LIMIT);
@@ -191,8 +214,10 @@ async function uploadMemoriesParallel(payloads) {
     
     batchResults.forEach((result, idx) => {
       if (result.status === "fulfilled") {
+        // ✅ Upload successful - MongoDB document with Cloudinary URL is returned
         results.push(result.value);
       } else {
+        // ❌ Upload failed - store error info for user feedback
         errors.push({
           file: batch[idx].file?.name || `File ${i + idx + 1}`,
           error: result.reason,
